@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:yapepro/screen/login_screen.dart';
 import 'package:yapepro/screen/dashboard_screen.dart';
 
 void main() {
+  assert(() {
+    // Asegura que ningún flag de debug painting quede activo
+    debugPaintBaselinesEnabled = false;
+    debugPaintSizeEnabled = false;
+    return true;
+  }());
   runApp(const MyApp());
 }
 
@@ -17,10 +24,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      initialRoute: '/dashboard',
+      initialRoute: '/DashboardScreen',
       routes: {
         '/': (context) => const LoginScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
+        '/DashboardScreen': (context) => const DashboardScreen(),
       },
     );
   }

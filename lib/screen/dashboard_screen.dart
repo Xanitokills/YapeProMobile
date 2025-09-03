@@ -1,6 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
+/// ====================== ROOT APP ======================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -61,7 +66,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ====================== APP CON SIDEBAR ======================
+/// ====================== SHELL CON SIDEBAR/DRAWER ======================
 class PymeVapeProApp extends StatefulWidget {
   const PymeVapeProApp({super.key});
 
@@ -72,15 +77,15 @@ class PymeVapeProApp extends StatefulWidget {
 class _PymeVapeProAppState extends State<PymeVapeProApp> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    InventoryScreen(),
-    POSScreen(),
-    StoresScreen(),
-    EmployeesScreen(),
-    ClientsScreen(),
-    SuppliersScreen(),
-    ReportsScreen(),
+  late final List<Widget> _screens = [
+    const DashboardScreen(),
+    const InventoryScreen(),
+    const POSScreen(),
+    const StoresScreen(),
+    const EmployeesScreen(),
+    const ClientsScreen(),
+    const SuppliersScreen(),
+    const ReportsScreen(),
   ];
 
   final List<NavigationItem> _navItems = const [
@@ -104,94 +109,36 @@ class _PymeVapeProAppState extends State<PymeVapeProApp> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          // Sidebar
-          Container(
-            width: 250,
-            color: const Color(0xFF2C3E50),
-            child: Column(
-              children: [
-                // Header logo
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE67E22),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.smoke_free,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'PymeVapePro',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Nav items
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _navItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _navItems[index];
-                      final isSelected = index == _currentIndex;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
 
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 2,
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            isSelected ? item.activeIcon : item.icon,
-                            color: isSelected
-                                ? const Color(0xFFE67E22)
-                                : Colors.white70,
-                          ),
-                          title: Text(
-                            item.title,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          selected: isSelected,
-                          selectedTileColor: const Color(
-                            0xFFE67E22,
-                          ).withOpacity(0.15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          onTap: () => setState(() => _currentIndex = index),
-                        ),
-                      );
-                    },
-                  ),
+        return Scaffold(
+          drawer: isWide
+              ? null
+              : _AppDrawer(
+                  items: _navItems,
+                  currentIndex: _currentIndex,
+                  onTap: (i) {
+                    Navigator.pop(context);
+                    setState(() => _currentIndex = i);
+                  },
                 ),
+          body: SafeArea(
+            child: Row(
+              children: [
+                if (isWide)
+                  _Sidebar(
+                    items: _navItems,
+                    currentIndex: _currentIndex,
+                    onTap: (i) => setState(() => _currentIndex = i),
+                  ),
+                Expanded(child: _screens[_currentIndex]),
               ],
             ),
           ),
-          // Main content
-          Expanded(child: _screens[_currentIndex]),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -203,7 +150,147 @@ class NavigationItem {
   const NavigationItem(this.title, this.icon, this.activeIcon);
 }
 
-// ====================== DASHBOARD ======================
+class _Sidebar extends StatelessWidget {
+  final List<NavigationItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  const _Sidebar({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250,
+      color: const Color(0xFF2C3E50),
+      child: Column(
+        children: [
+          // Header logo
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE67E22),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.smoke_free,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'PymeVapePro',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Nav
+          Expanded(
+            child: ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (context, i) {
+                final item = items[i];
+                final isSelected = i == currentIndex;
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      color: isSelected
+                          ? const Color(0xFFE67E22)
+                          : Colors.white70,
+                    ),
+                    title: Text(
+                      item.title,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : Colors.white70,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedTileColor: const Color(
+                      0xFFE67E22,
+                    ).withOpacity(0.15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    onTap: () => onTap(i),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppDrawer extends StatelessWidget {
+  final List<NavigationItem> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  const _AppDrawer({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            const ListTile(
+              title: Text(
+                'PymeVapePro',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              leading: Icon(Icons.smoke_free),
+            ),
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (_, i) {
+                  final it = items[i];
+                  final sel = i == currentIndex;
+                  return ListTile(
+                    leading: Icon(sel ? it.activeIcon : it.icon),
+                    title: Text(it.title),
+                    selected: sel,
+                    onTap: () => onTap(i),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ====================== DASHBOARD ======================
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -235,6 +322,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.dispose();
   }
 
+  bool get _isWide => MediaQuery.of(context).size.width >= 900;
+
   @override
   Widget build(BuildContext context) {
     const totalRevenue = 4725.0;
@@ -242,9 +331,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     const pendingOrders = 1;
     const lowStockCount = 1;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF6C5CE7),
-      body: FadeTransition(
+    return ColoredBox(
+      color: const Color(0xFF6C5CE7),
+      child: FadeTransition(
         opacity: _fadeAnimation,
         child: Column(
           children: [
@@ -295,11 +384,19 @@ class _DashboardScreenState extends State<DashboardScreen>
           end: Alignment.bottomRight,
         ),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              if (!_isWide)
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                  ),
+                ),
+              const SizedBox(width: 4),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -321,45 +418,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  dateStr,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: Colors.white,
+              size: 24,
             ),
           ),
         ],
@@ -373,8 +443,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     int pendingOrders,
     int lowStockCount,
   ) {
+    // En anchas: 4 cards; en móviles: 2
+    final crossAxisCount = _isWide ? 4 : 2;
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: crossAxisCount,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
@@ -661,12 +733,12 @@ class _DashboardScreenState extends State<DashboardScreen>
             const SizedBox(height: 8),
             Text(
               title,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF2D3436),
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -699,30 +771,30 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          child: Column(
+          child: const Column(
             children: [
-              _activityItem(
-                'Venta completada',
-                'Orden #1001 - S/ 2,450.00',
-                Icons.check_circle_outline,
-                const Color(0xFF00B894),
-                'Hace 2 horas',
+              _ActivityItem(
+                title: 'Venta completada',
+                description: 'Orden #1001 - S/ 2,450.00',
+                icon: Icons.check_circle_outline,
+                color: Color(0xFF00B894),
+                time: 'Hace 2 horas',
               ),
-              _divider(),
-              _activityItem(
-                'Stock bajo detectado',
-                'Teclado Mecánico - 1 unidad restante',
-                Icons.warning_outlined,
-                const Color(0xFFE74C3C),
-                'Hace 4 horas',
+              _DividerLine(),
+              _ActivityItem(
+                title: 'Stock bajo detectado',
+                description: 'Teclado Mecánico - 1 unidad restante',
+                icon: Icons.warning_outlined,
+                color: Color(0xFFE74C3C),
+                time: 'Hace 4 horas',
               ),
-              _divider(),
-              _activityItem(
-                'Nueva orden recibida',
-                'Orden #1002 - Pendiente de pago',
-                Icons.shopping_bag_outlined,
-                const Color(0xFF3498DB),
-                'Ayer',
+              _DividerLine(),
+              _ActivityItem(
+                title: 'Nueva orden recibida',
+                description: 'Orden #1002 - Pendiente de pago',
+                icon: Icons.shopping_bag_outlined,
+                color: Color(0xFF3498DB),
+                time: 'Ayer',
               ),
             ],
           ),
@@ -730,14 +802,24 @@ class _DashboardScreenState extends State<DashboardScreen>
       ],
     );
   }
+}
 
-  Widget _activityItem(
-    String title,
-    String description,
-    IconData icon,
-    Color color,
-    String time,
-  ) {
+class _ActivityItem extends StatelessWidget {
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color color;
+  final String time;
+  const _ActivityItem({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -776,15 +858,22 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
     );
   }
-
-  Widget _divider() => Container(
-    height: 1,
-    margin: const EdgeInsets.symmetric(horizontal: 16),
-    color: Colors.grey[100],
-  );
 }
 
-// ====================== INVENTARIO ======================
+class _DividerLine extends StatelessWidget {
+  const _DividerLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      color: Colors.grey[100],
+    );
+  }
+}
+
+/// ====================== INVENTARIO ======================
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
 
@@ -859,11 +948,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }).toList();
   }
 
+  bool get _isWide => MediaQuery.of(context).size.width >= 900;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
           _buildHeader(),
           _buildFilters(),
@@ -885,13 +976,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Inventario',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3436),
-            ),
+          Row(
+            children: [
+              if (!_isWide)
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                  ),
+                ),
+              const SizedBox(width: 4),
+              const Text(
+                'Inventario',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3436),
+                ),
+              ),
+            ],
           ),
           ElevatedButton.icon(
             onPressed: _showAddProductDialog,
@@ -1054,6 +1157,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ),
       child: Row(
         children: [
+          const SizedBox(width: 0),
           Expanded(
             flex: 3,
             child: Text(
@@ -1078,12 +1182,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
               child: Text(
                 p.status,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDisponible ? Colors.green[700] : Colors.red[700],
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -1154,34 +1258,35 @@ class Product {
   );
 }
 
-// ====================== POS ======================
+/// ====================== POS ======================
 class POSScreen extends StatelessWidget {
   const POSScreen({super.key});
 
+  bool get _isWide => false; // no usado aquí
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Row(
+    final isWide = MediaQuery.of(context).size.width >= 900;
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
-          Expanded(flex: 3, child: _buildProductSection()),
-          Container(width: 1, color: Colors.grey[300]),
-          Expanded(flex: 2, child: _buildCartSection()),
+          _buildPOSHeader(isWide: isWide),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(flex: 3, child: _buildProductSection()),
+                Container(width: 1, color: Colors.grey[300]),
+                Expanded(flex: 2, child: _buildCartSection()),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildProductSection() {
-    return Column(
-      children: [
-        _buildPOSHeader(),
-        Expanded(child: _buildProductGrid()),
-      ],
-    );
-  }
-
-  Widget _buildPOSHeader() {
+  Widget _buildPOSHeader({required bool isWide}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -1195,13 +1300,25 @@ class POSScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Ventas (POS)',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3436),
-                ),
+              Row(
+                children: [
+                  if (!isWide)
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                      ),
+                    ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Ventas (POS)',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3436),
+                    ),
+                  ),
+                ],
               ),
               Row(
                 children: [
@@ -1245,7 +1362,7 @@ class POSScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductGrid() {
+  Widget _buildProductSection() {
     final products = [
       {'name': 'Laptop HP', 'price': 2500.00, 'stock': 5},
       {'name': 'Mouse Inalámbrico', 'price': 45.00, 'stock': 15},
@@ -1255,25 +1372,31 @@ class POSScreen extends StatelessWidget {
       {'name': 'Webcam HD', 'price': 85.00, 'stock': 6},
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.1,
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final p = products[index];
+                return _buildProductCard(
+                  p['name'] as String,
+                  p['price'] as double,
+                  p['stock'] as int,
+                );
+              },
+            ),
+          ),
         ),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final p = products[index];
-          return _buildProductCard(
-            p['name'] as String,
-            p['price'] as double,
-            p['stock'] as int,
-          );
-        },
-      ),
+      ],
     );
   }
 
@@ -1324,7 +1447,6 @@ class POSScreen extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 4),
                 const Spacer(),
                 Text(
                   'S/ ${price.toStringAsFixed(2)}',
@@ -1494,12 +1616,13 @@ class _SummaryRow extends StatelessWidget {
   }
 }
 
-// ====================== TIENDAS ======================
+/// ====================== TIENDAS ======================
 class StoresScreen extends StatelessWidget {
   const StoresScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 900;
     final stores = [
       {
         'name': 'Tienda Principal',
@@ -1524,9 +1647,9 @@ class StoresScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -1543,13 +1666,25 @@ class StoresScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Tiendas',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3436),
-                  ),
+                Row(
+                  children: [
+                    if (!isWide)
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Tiendas',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                  ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
@@ -1574,8 +1709,8 @@ class StoresScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isWide ? 2 : 1,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.3,
@@ -1721,12 +1856,13 @@ class StoresScreen extends StatelessWidget {
   }
 }
 
-// ====================== EMPLEADOS ======================
+/// ====================== EMPLEADOS ======================
 class EmployeesScreen extends StatelessWidget {
   const EmployeesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 900;
     final employees = [
       {
         'name': 'Ana Rodríguez',
@@ -1762,9 +1898,9 @@ class EmployeesScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -1781,13 +1917,25 @@ class EmployeesScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Empleados',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3436),
-                  ),
+                Row(
+                  children: [
+                    if (!isWide)
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Empleados',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                  ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
@@ -1950,12 +2098,12 @@ class EmployeesScreen extends StatelessWidget {
               ),
               child: Text(
                 e['status']!,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isActive ? Colors.green[700] : Colors.orange[700],
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -1992,12 +2140,13 @@ class EmployeesScreen extends StatelessWidget {
   }
 }
 
-// ====================== CLIENTES ======================
+/// ====================== CLIENTES ======================
 class ClientsScreen extends StatelessWidget {
   const ClientsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 900;
     final clients = [
       {
         'name': 'Pedro Martínez',
@@ -2033,9 +2182,9 @@ class ClientsScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -2052,13 +2201,25 @@ class ClientsScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Clientes',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3436),
-                  ),
+                Row(
+                  children: [
+                    if (!isWide)
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Clientes',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                  ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
@@ -2289,12 +2450,13 @@ class ClientsScreen extends StatelessWidget {
   }
 }
 
-// ====================== PROVEEDORES ======================
+/// ====================== PROVEEDORES ======================
 class SuppliersScreen extends StatelessWidget {
   const SuppliersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.of(context).size.width >= 900;
     final suppliers = [
       {
         'name': 'TechDistributor SAC',
@@ -2331,9 +2493,9 @@ class SuppliersScreen extends StatelessWidget {
       },
     ];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -2350,13 +2512,25 @@ class SuppliersScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Proveedores',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D3436),
-                  ),
+                Row(
+                  children: [
+                    if (!isWide)
+                      Builder(
+                        builder: (ctx) => IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Proveedores',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3436),
+                      ),
+                    ),
+                  ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
@@ -2586,25 +2760,27 @@ class SuppliersScreen extends StatelessWidget {
   }
 }
 
-// ====================== REPORTES ======================
+/// ====================== REPORTES ======================
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      body: Column(
+    final isWide = MediaQuery.of(context).size.width >= 900;
+
+    return Container(
+      color: const Color(0xFFF8F9FE),
+      child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(isWide),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildQuickStats(),
+                  _buildQuickStats(isWide: isWide),
                   const SizedBox(height: 24),
-                  _buildReportCategories(),
+                  _buildReportCategories(isWide: isWide),
                   const SizedBox(height: 24),
                   _buildChartSection(),
                 ],
@@ -2616,7 +2792,7 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isWide) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -2628,20 +2804,32 @@ class ReportsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              const Text(
-                'Reportes',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3436),
+              if (!isWide)
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed: () => Scaffold.maybeOf(ctx)?.openDrawer(),
+                  ),
                 ),
-              ),
-              Text(
-                'Análisis de rendimiento del negocio',
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              const SizedBox(width: 4),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Reportes',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D3436),
+                    ),
+                  ),
+                  Text(
+                    'Análisis de rendimiento del negocio',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  ),
+                ],
               ),
             ],
           ),
@@ -2669,9 +2857,10 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickStats() {
+  Widget _buildQuickStats({required bool isWide}) {
+    final cross = isWide ? 4 : 2;
     return GridView.count(
-      crossAxisCount: 4,
+      crossAxisCount: cross,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
@@ -2770,7 +2959,7 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReportCategories() {
+  Widget _buildReportCategories({required bool isWide}) {
     final categories = [
       {
         'title': 'Reporte de Ventas',
@@ -2813,8 +3002,8 @@ class ReportsScreen extends StatelessWidget {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isWide ? 2 : 1,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             childAspectRatio: 1.8,
